@@ -1,16 +1,26 @@
 // components/AuthTokenInput.js
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import ApiService from '../services/api';
 import SocketService from '../services/socket';
 
 const AuthTokenInput = () => {
   const [token, setToken] = useState('');
+  const location = useLocation();
 
   useEffect(() => {
     async function fetchData() {
-      const token = await ApiService.getAuthToken();
-      await SocketService.setAuthToken();
-      setToken(token);
+      const queryParams = new URLSearchParams(location.search);
+      const accessTokenFromUrl = queryParams.get('accessToken');
+
+      if (accessTokenFromUrl) {
+        setToken(accessTokenFromUrl);
+        await ApiService.setAuthToken(accessTokenFromUrl);
+      } else {
+        const localToken = await ApiService.getAuthToken();
+        await SocketService.setAuthToken();
+        setToken(localToken);
+      }
     }
     fetchData();
   }, []);
