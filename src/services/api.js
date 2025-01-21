@@ -1,7 +1,7 @@
 // services/api.js
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8080/api/v1';
+const API_URL = 'https://api-dev.aylinhontas.edein.name/api/v1';
 
 const ApiService = {
   getAuthToken: () => {
@@ -48,6 +48,22 @@ const ApiService = {
       return res.data;
     } catch {
       return [];
+    }
+  },
+  sendFileMessage: async (chatId, file) => {
+    try {
+      const token = ApiService.getAuthToken();
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await axios.post(
+        `${API_URL}/chat-messages/chats/${chatId}/messages/file`,
+        formData,
+        { headers: { Authorization: 'Bearer ' + token } }
+      );
+      return res.data;
+    } catch {
+      return null;
     }
   },
 };

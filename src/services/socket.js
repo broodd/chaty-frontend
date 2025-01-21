@@ -8,15 +8,19 @@ const SocketService = {
   setAuthToken: () => {
     const token = ApiService.getAuthToken();
 
+    // if user change token => disconect prev socket
     if (socket) socket.disconnect();
-    socket = io('ws://localhost:8080', {
+
+    socket = io('wss://api-dev.aylinhontas.edein.name', {
       auth: { token },
       transports: ['websocket'],
       reconnectionAttempts: 5,
     });
+
+    // just for development test
     window.socket = socket;
   },
-  sendMessage: (text, chatId) => {
+  sendMessage: ({ text, file, chatId }) => {
     const message = {
       text,
       chat: { id: chatId },
@@ -27,7 +31,9 @@ const SocketService = {
     socket?.emit('CHAT_READ_MESSAGE', { id: messageId, chat: { id: chatId } });
   },
   onReceiveMessage: (callback) => {
-    socket?.on('CHAT_RECEIVE_MESSAGE', callback);
+    setTimeout(() => {
+      socket?.on('CHAT_RECEIVE_MESSAGE', callback);
+    }, 300);
   },
   onReadMessage: (callback) => {
     socket?.on('CHAT_READ_MESSAGE', callback);

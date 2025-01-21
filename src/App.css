@@ -201,6 +201,14 @@ li {
   float: right;
 }
 
+.messages-container .message .image {
+  width: 200px;
+}
+
+.messages-container .message .image img {
+  width: 100%;
+}
+
 .messages-container .message .text {
   display: flex;
   flex-direction: column;

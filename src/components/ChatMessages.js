@@ -13,6 +13,7 @@ const ChatMessages = () => {
   const [limit] = useState(10);
   const [newMessage, setNewMessage] = useState('');
   const isInitialMount = useRef(true);
+  const [file, setFile] = useState(null);
 
   useEffect(() => {
     fetchMessages();
@@ -56,12 +57,30 @@ const ChatMessages = () => {
   };
 
   const sendMessage = () => {
-    SocketService.sendMessage(newMessage, chatId);
+    if (file) return sendFile();
+
+    SocketService.sendMessage({ text: newMessage, chatId });
     setNewMessage('');
   };
 
   const readMessage = (messageId) => {
     SocketService.readMessage(messageId, chatId);
+  };
+
+  const handleFileChange = (event) => {
+    try {
+      const res = event.target.files[0];
+      setFile(res);
+    } catch {
+      setFile(null);
+    }
+  };
+
+  const sendFile = async () => {
+    if (!file) return;
+
+    await ApiService.sendFileMessage(chatId, file);
+    setFile(null);
   };
 
   return (
@@ -71,6 +90,7 @@ const ChatMessages = () => {
       <div
         id="messages-scroll"
         style={{
+          height: '100%',
           overflowY: 'auto',
           marginBottom: '20px',
           marginRight: '-20px',
@@ -87,12 +107,18 @@ const ChatMessages = () => {
                   : 'message message-receiver'
               }
             >
-              <div className="text">
-                {message.text}
-                <small>
-                  {new Date(message.createdAt).toLocaleTimeString()}
-                </small>
-              </div>
+              {message.file ? (
+                <div className="image">
+                  <img src={message.file.src} alt="" />
+                </div>
+              ) : (
+                <div className="text">
+                  {message.text}
+                  <small>
+                    {new Date(message.createdAt).toLocaleTimeString()}
+                  </small>
+                </div>
+              )}
               {message.readAt && message.ownerId === userId && (
                 <small>
                   Viewed at
@@ -104,40 +130,13 @@ const ChatMessages = () => {
         </div>
       </div>
 
-      {/* Placeholder example */}
-      {!messages.length && (
-        <div className="messages">
-          <div className="message message-sender">
-            <div className="text">
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Libero
-              commodi porro veritatis, quis sin<small>00:08:56</small>
-            </div>
-            <small>Viewed at 17:19:32</small>
-          </div>
-
-          <div className="message message-sender">
-            <div className="text">
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Libero
-              commodi porro veritatis, quis sin<small>00:09:01</small>
-            </div>
-            <small>Viewed at 17:19:32</small>
-          </div>
-
-          <div className="message message-receiver">
-            <div className="text">
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Libero
-              commodi porro veritatis, quis sin<small>00:09:01</small>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="send-message">
         <textarea
           type="text"
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
         />
+        <input type="file" onChange={handleFileChange} />
         <button onClick={sendMessage}>Send</button>
       </div>
     </div>
